@@ -15,6 +15,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   // Membuat instance SupabaseClient untuk mengakses database
   final SupabaseClient _supabase = Supabase.instance.client;
+
+  // Menyimpan index halaman yang aktif (0: Produk, 1: Transaksi, 2: Profil)
+  int _currentIndex = 0;
+
   // Fungsi untuk mengambil data produk dari Supabase
   Future<List<Map<String, dynamic>>> _fetchProducts() async {
     try {
@@ -77,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     // Tombol untuk menghapus produk
                     IconButton(
                       icon: const Icon(Icons.delete),
-                      color: const Color.fromARGB(255, 255, 186, 82),
+                      color: const Color.fromARGB(255, 255, 137, 82),
                       onPressed: () {
                         _showDeleteConfirmation(product['id_produk']); // Memanggil fungsi konfirmasi hapus produk
                       },
@@ -274,16 +278,3 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-
-  // Fungsi untuk menambahkan produk ke database
-  Future<void> _addProduct(String namaProduk, String harga, String stok) async {
-    final hargaParsed = double.tryParse(harga);
-    final stokParsed = int.tryParse(stok);
-
-    // Validasi input
-    if (namaProduk.isEmpty || hargaParsed == null || stokParsed == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mohon isi semua data dengan benar!')),
-      );
-      return;
-    }
