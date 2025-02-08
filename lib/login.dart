@@ -21,10 +21,12 @@ class LoginPage extends StatelessWidget {
           .maybeSingle();
 
       if (response != null) {
-        // Login berhasil
+        // Login berhasil, ambil username yang berhasil login
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen(username: '',)),
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(username: username), // Pass username yang valid
+          ),
         );
       } else {
         // Login gagal
