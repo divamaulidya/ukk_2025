@@ -17,12 +17,11 @@ class _CustomersPageState extends State<CustomersPage> {
     fetchCustomers();
   }
 
-  // 🔹 Ambil data pelanggan dari Supabase
+  //  Ambil data pelanggan dari Supabase
   Future<void> fetchCustomers() async {
     try {
       final response = await supabase.from('pelanggan').select();
-
-      print("Customer Data: $response"); //  Debugging untuk cek data
+      print("Customer Data: $response"); // Debugging
 
       setState(() {
         customers = List<Map<String, dynamic>>.from(response);
@@ -34,8 +33,8 @@ class _CustomersPageState extends State<CustomersPage> {
     }
   }
 
-  // 🔹 Tambah atau Edit pelanggan di database
-  Future<void> showCustomerDialog({int? customerId, String? nama, String? alamat, String? telepon}) async {
+  //  Tambah atau Edit pelanggan
+  Future<void> showCustomerDialog({int? pelangganId, String? nama, String? alamat, String? telepon}) async {
     TextEditingController nameController = TextEditingController(text: nama ?? '');
     TextEditingController addressController = TextEditingController(text: alamat ?? '');
     TextEditingController phoneController = TextEditingController(text: telepon ?? '');
@@ -44,7 +43,7 @@ class _CustomersPageState extends State<CustomersPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(customerId == null ? "Tambah Pelanggan" : "Edit Pelanggan"),
+          title: Text(pelangganId == null ? "Tambah Pelanggan" : "Edit Pelanggan"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -59,20 +58,21 @@ class _CustomersPageState extends State<CustomersPage> {
               onPressed: () async {
                 if (nameController.text.isNotEmpty && phoneController.text.isNotEmpty) {
                   try {
-                    if (customerId == null) {
-                      // 🔹 Insert data baru jika ID kosong
+                    if (pelangganId == null) {
+                      //  Insert data baru
                       await supabase.from('pelanggan').insert({
                         'nama_pelanggan': nameController.text,
                         'alamat': addressController.text,
                         'nomor_telepon': phoneController.text,
+                        'created_at': DateTime.now().toIso8601String(), // Sesuai tabel
                       });
                     } else {
-                      // 🔹 Update data pelanggan jika ID ada
+                      //  Update data pelanggan
                       await supabase.from('pelanggan').update({
                         'nama_pelanggan': nameController.text,
                         'alamat': addressController.text,
                         'nomor_telepon': phoneController.text,
-                      }).eq('id', customerId);
+                      }).match({'pelanggan_id': pelangganId}); // 🔹 Gunakan match()
                     }
                     fetchCustomers();
                     Navigator.pop(context);
@@ -81,7 +81,7 @@ class _CustomersPageState extends State<CustomersPage> {
                   }
                 }
               },
-              child: Text(customerId == null ? "Tambah" : "Simpan"),
+              child: Text(pelangganId == null ? "Tambah" : "Simpan"),
             ),
           ],
         );
@@ -89,13 +89,14 @@ class _CustomersPageState extends State<CustomersPage> {
     );
   }
 
-  // 🔹 Hapus pelanggan berdasarkan ID
-  Future<void> deleteCustomer(int customerId) async {
+  // Hapus pelanggan berdasarkan ID
+  Future<void> deleteCustomer(int pelangganId) async {
     try {
-      await supabase.from('pelanggan').delete().eq('id', customerId);
-      fetchCustomers(); // Refresh data setelah menghapus pelanggan
+      final response = await supabase.from('pelanggan').delete().match({'pelanggan_id': pelangganId});
+      print("Delete Response: $response"); // Debugging
+      fetchCustomers();
     } catch (e) {
-      print(" Error deleting customer: $e");
+      print("Error deleting customer: $e");
     }
   }
 
@@ -112,8 +113,8 @@ class _CustomersPageState extends State<CustomersPage> {
                   itemBuilder: (context, index) {
                     final customer = customers[index];
 
-                    // 🔹 Pastikan ID tidak null, default ke 0 jika null
-                    int customerId = customer['id'] ?? 0; 
+                    //  Pastikan ID tidak null, default ke -1 jika null
+                    int pelangganId = customer['pelanggan_id'] ?? -1;
 
                     return Card(
                       margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -133,12 +134,12 @@ class _CustomersPageState extends State<CustomersPage> {
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            //  Tombol Edit
+                            // 🔹 Tombol Edit
                             IconButton(
                               icon: Icon(Icons.edit, color: Colors.green),
                               onPressed: () {
                                 showCustomerDialog(
-                                  customerId: customerId,
+                                  pelangganId: pelangganId,
                                   nama: customer['nama_pelanggan'],
                                   alamat: customer['alamat'],
                                   telepon: customer['nomor_telepon'],
@@ -149,8 +150,10 @@ class _CustomersPageState extends State<CustomersPage> {
                             IconButton(
                               icon: Icon(Icons.delete, color: Colors.red),
                               onPressed: () {
-                                if (customerId > 0) { // 🔹 Pastikan ID valid sebelum menghapus
-                                  deleteCustomer(customerId);
+                                if (pelangganId > 0) { // 🔹 Pastikan ID valid sebelum menghapus
+                                  deleteCustomer(pelangganId);
+                                } else {
+                                  print("Invalid ID: $pelangganId");
                                 }
                               },
                             ),

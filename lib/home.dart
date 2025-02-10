@@ -3,7 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login.dart';
 import 'produk.dart';
 import 'user.dart';
-import 'pelanggan.dart'; // Tambahkan import ini
+import 'pelanggan.dart';
+import 'penjualan.dart'; // Tambahkan import untuk halaman penjualan
 
 class HomeScreen extends StatefulWidget {
   final String username;
@@ -16,11 +17,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  final TextEditingController _searchController = TextEditingController();
 
   final List<Widget> _pages = [
-    ProductsPage(),
+    ProdukPage(),
     UsersPage(),
-    CustomersPage(), // 🔹 Tambahkan halaman pelanggan di sini
+    CustomersPage(),
+    PenjualanScreen(), // Tambahkan halaman penjualan di sini
   ];
 
   void _onItemTapped(int index) {
@@ -33,29 +36,49 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Welcome, ${widget.username}"),
-        backgroundColor: Color.fromARGB(255, 143, 101, 11),
+        title: Text("CoffeShop"),
+        backgroundColor: Color.fromRGBO(226, 216, 193, 1),
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () async {
               final supabase = Supabase.instance.client;
               await supabase.auth.signOut();
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage()));
+              Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (context) => LoginPage()));
             },
           )
         ],
       ),
-      body: _pages[_selectedIndex],
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Search',
+                border: OutlineInputBorder(),
+                suffixIcon: Icon(Icons.search),
+              ),
+            ),
+          ),
+          Expanded(child: _pages[_selectedIndex]),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Produk'),
           BottomNavigationBarItem(icon: Icon(Icons.app_registration), label: 'Registrasi'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Pelanggan'), // Tambah icon pelanggan
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Pelanggan'),
+          BottomNavigationBarItem(icon: Icon(Icons.monetization_on), label: 'Penjualan'), // Tambahkan tab Penjualan
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Color.fromARGB(255, 163, 129, 35),
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.black,
+        backgroundColor: Color.fromARGB(255, 163, 129, 35), // Warna latar belakang bottom bar
         onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }

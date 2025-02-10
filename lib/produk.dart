@@ -1,225 +1,157 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'home.dart';
 
-class ProductsPage extends StatefulWidget {
+final supabase = Supabase.instance.client;
+
+class ProdukPage extends StatefulWidget {
+  const ProdukPage({super.key});
+
   @override
-  _ProductsPageState createState() => _ProductsPageState();
+  _ProdukPageState createState() => _ProdukPageState();
 }
 
-class _ProductsPageState extends State<ProductsPage> {
-  final supabase = Supabase.instance.client;
-  List<Map<String, dynamic>> products = [];
-  bool isLoading = true;
+class _ProdukPageState extends State<ProdukPage> {
+  List<dynamic> produkList = [];
+  TextEditingController nameController = TextEditingController();
+  TextEditingController priceController = TextEditingController();
+  TextEditingController stockController = TextEditingController();
+  int? selectedId;
 
   @override
   void initState() {
     super.initState();
-    fetchProducts();
+    fetchProduk();
   }
 
-  Future<void> fetchProducts() async {
-    try {
-      final response = await supabase.from('produk').select();
-      print("✅ Data produk: $response");
+  Future<void> fetchProduk() async {
+    final response = await supabase.from('produk').select();
+    setState(() {
+      produkList = response;
+    });
+  }
 
-      setState(() {
-        products = List<Map<String, dynamic>>.from(response);
-        isLoading = false;
-      });
-    } catch (e) {
-      print("❌ Error fetch data: $e");
-      setState(() => isLoading = false);
+  Future<void> addProduk() async {
+    await supabase.from('produk').insert({
+      'nama_produk': nameController.text,
+      'harga': int.parse(priceController.text),
+      'stok': int.parse(stockController.text),
+    });
+    clearFields();
+    fetchProduk();
+  }
+
+  Future<void> editProduk(int id) async {
+    await supabase.from('produk').update({
+      'nama_produk': nameController.text,
+      'harga': int.parse(priceController.text),
+      'stok': int.parse(stockController.text),
+    }).eq('produk_id', id);
+    clearFields();
+    fetchProduk();
+  }
+
+  Future<void> deleteProduk(int id) async {
+    await supabase.from('produk').delete().eq('produk_id', id);
+    fetchProduk();
+  }
+
+  void clearFields() {
+    nameController.clear();
+    priceController.clear();
+    stockController.clear();
+    setState(() => selectedId = null);
+  }
+
+  void showForm({int? id, String? nama, int? harga, int? stok}) {
+    if (id != null) {
+      selectedId = id;
+      nameController.text = nama!;
+      priceController.text = harga.toString();
+      stockController.text = stok.toString();
+    } else {
+      clearFields();
     }
-  }
-
-  Future<void> addProduct() async {
-    TextEditingController nameController = TextEditingController();
-    TextEditingController stockController = TextEditingController();
-    TextEditingController priceController = TextEditingController();
-
-    showDialog(
+    
+    showModalBottomSheet(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Tambah Produk"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: nameController, decoration: InputDecoration(labelText: "Nama Produk")),
-              TextField(controller: stockController, decoration: InputDecoration(labelText: "Stok"), keyboardType: TextInputType.number),
-              TextField(controller: priceController, decoration: InputDecoration(labelText: "Harga"), keyboardType: TextInputType.number),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text("Batal")),
-            ElevatedButton(
-              onPressed: () async {
-                if (nameController.text.isNotEmpty && stockController.text.isNotEmpty && priceController.text.isNotEmpty) {
-                  try {
-                    await supabase.from('produk').insert({
-                      'nama_produk': nameController.text,
-                      'stok': int.parse(stockController.text),
-                      'harga': int.parse(priceController.text),
-                    });
-                    print("✅ Produk berhasil ditambahkan!");
-                    fetchProducts();
-                    Navigator.pop(context);
-                  } catch (e) {
-                    print("❌ Error menambah produk: $e");
-                  }
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(
+          left: 20, right: 20, top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Nama Produk')),
+            TextField(controller: priceController, decoration: const InputDecoration(labelText: 'Harga'), keyboardType: TextInputType.number),
+            TextField(controller: stockController, decoration: const InputDecoration(labelText: 'Stok'), keyboardType: TextInputType.number),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: () {
+                if (selectedId == null) {
+                  addProduk();
+                } else {
+                  editProduk(selectedId!);
                 }
+                Navigator.pop(context);
               },
-              child: Text("Tambah"),
+              icon: const Icon(Icons.save),
+              label: Text(selectedId == null ? 'Tambah Produk' : 'Simpan Perubahan'),
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
-  }
-
-  Future<void> editProduct(int id, String currentName, int currentStock, int currentPrice) async {
-    TextEditingController nameController = TextEditingController(text: currentName);
-    TextEditingController stockController = TextEditingController(text: currentStock.toString());
-    TextEditingController priceController = TextEditingController(text: currentPrice.toString());
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Edit Produk"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: nameController, decoration: InputDecoration(labelText: "Nama Produk")),
-              TextField(controller: stockController, decoration: InputDecoration(labelText: "Stok"), keyboardType: TextInputType.number),
-              TextField(controller: priceController, decoration: InputDecoration(labelText: "Harga"), keyboardType: TextInputType.number),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text("Batal")),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  await supabase.from('produk').update({
-                    'nama_produk': nameController.text,
-                    'stok': int.parse(stockController.text),
-                    'harga': int.parse(priceController.text),
-                  }).eq('id', id);
-                  print("✅ Produk berhasil diperbarui!");
-                  fetchProducts();
-                  Navigator.pop(context);
-                } catch (e) {
-                  print("❌ Error mengedit produk: $e");
-                }
-              },
-              child: Text("Simpan"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> deleteProduct(int id) async {
-    try {
-      print("🗑️ Menghapus produk dengan ID: $id");
-      await supabase.from('produk').delete().eq('id', id);
-      print("✅ Produk berhasil dihapus!");
-      fetchProducts();
-    } catch (e) {
-      print("❌ Error menghapus produk: $e");
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Daftar Produk")),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : products.isEmpty
-              ? Center(child: Text("Tidak ada produk yang tersedia."))
-              : ListView.builder(
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-                    int productId = product['id'] is int ? product['id'] : int.tryParse(product['id'].toString()) ?? 0;
-
-                    return Card(
-                      margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 5,
-                      shadowColor: Colors.grey.withOpacity(0.5),
-                      child: Padding(
-                        padding: EdgeInsets.all(12),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Colors.amber.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Icon(Icons.shopping_cart, color: Colors.amber, size: 30),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    product['nama_produk'],
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text("Stok: ${product['stok']} | Harga: Rp${product['harga']}",
-                                      style: TextStyle(color: Colors.grey[700])),
-                                ],
-                              ),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(Icons.edit, color: Colors.blue),
-                                  onPressed: () {
-                                    if (productId > 0) {
-                                      editProduct(
-                                        productId,
-                                        product['nama_produk'],
-                                        product['stok'] is int ? product['stok'] : int.tryParse(product['stok'].toString()) ?? 0,
-                                        product['harga'] is int ? product['harga'] : int.tryParse(product['harga'].toString()) ?? 0,
-                                      );
-                                    } else {
-                                      print("❌ ID tidak valid: ${product['id']}");
-                                    }
-                                  },
-                                ),
-                                IconButton(
-                                  icon: Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () {
-                                    if (productId > 0) {
-                                      deleteProduct(productId);
-                                    } else {
-                                      print("❌ ID tidak valid: ${product['id']}");
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
+      appBar: AppBar(title: const Text("Daftar Produk")),
       floatingActionButton: FloatingActionButton(
-        onPressed: addProduct,
-        child: Icon(Icons.add),
-        backgroundColor: Colors.amber,
+        onPressed: () => showForm(),
+        child: const Icon(Icons.add),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: ListView.builder(
+          itemCount: produkList.length,
+          itemBuilder: (context, index) {
+            final produk = produkList[index];
+            return Card(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              elevation: 2,
+              margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(8),
+                title: Text(produk['nama_produk'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                subtitle: Text("Harga: Rp ${produk['harga']} | Stok: ${produk['stok']}", style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                trailing: Wrap(
+                  spacing: 6,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () => showForm(
+                        id: produk['produk_id'],
+                        nama: produk['nama_produk'],
+                        harga: produk['harga'],
+                        stok: produk['stok'],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => deleteProduk(produk['produk_id']),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

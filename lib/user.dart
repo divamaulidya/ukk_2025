@@ -33,7 +33,7 @@ class _UsersPageState extends State<UsersPage> {
     }
   }
 
-  // 🗑️ Hapus User
+  //  Hapus User
   Future<void> deleteUser(int id) async {
     try {
       await supabase.from('user').delete().eq('id', id);

@@ -5,6 +5,7 @@ import 'package:kasir/home.dart';
 class LoginPage extends StatelessWidget {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool _obscurePassword = true; // State untuk mengontrol visibilitas password
 
   Future<void> login(BuildContext context) async {
     final supabase = Supabase.instance.client;
@@ -89,10 +90,16 @@ class LoginPage extends StatelessWidget {
                         padding: EdgeInsets.fromLTRB(0, 16, 0, 0),
                         child: TextField(
                           controller: passwordController,
-                          obscureText: true,
+                          obscureText: _obscurePassword,
                           decoration: InputDecoration(
                             labelText: "Password",
                             prefixIcon: Icon(Icons.lock),
+                            suffixIcon: IconButton(
+                              icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                              onPressed: () {
+                                _obscurePassword = !_obscurePassword;
+                              },
+                            ),
                           ),
                         ),
                       ),
