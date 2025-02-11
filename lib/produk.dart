@@ -111,7 +111,10 @@ class _ProdukPageState extends State<ProdukPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Daftar Produk")),
+      appBar: AppBar(
+        title: const Text("Daftar Produk"),
+        automaticallyImplyLeading: false, // Menghilangkan tombol back
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => showForm(),
         child: const Icon(Icons.add),

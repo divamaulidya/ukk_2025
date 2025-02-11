@@ -4,7 +4,8 @@ import 'login.dart';
 import 'produk.dart';
 import 'user.dart';
 import 'pelanggan.dart';
-import 'penjualan.dart'; // Tambahkan import untuk halaman penjualan
+import 'penjualan.dart';
+import 'riwayat.dart';
 
 class HomeScreen extends StatefulWidget {
   final String username;
@@ -23,7 +24,8 @@ class _HomeScreenState extends State<HomeScreen> {
     ProdukPage(),
     UsersPage(),
     CustomersPage(),
-    PenjualanScreen(), // Tambahkan halaman penjualan di sini
+    TransaksiScreen(),
+    RiwayatPenjualan(),
   ];
 
   void _onItemTapped(int index) {
@@ -52,17 +54,18 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          Padding(
-            padding: EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                labelText: 'Search',
-                border: OutlineInputBorder(),
-                suffixIcon: Icon(Icons.search),
+          if (_selectedIndex == 0 || _selectedIndex == 2) // Hanya tampil di Produk & Pelanggan
+            Padding(
+              padding: EdgeInsets.all(16.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  labelText: 'Search',
+                  border: OutlineInputBorder(),
+                  suffixIcon: Icon(Icons.search),
+                ),
               ),
             ),
-          ),
           Expanded(child: _pages[_selectedIndex]),
         ],
       ),
@@ -71,12 +74,13 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Produk'),
           BottomNavigationBarItem(icon: Icon(Icons.app_registration), label: 'Registrasi'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Pelanggan'),
-          BottomNavigationBarItem(icon: Icon(Icons.monetization_on), label: 'Penjualan'), // Tambahkan tab Penjualan
+          BottomNavigationBarItem(icon: Icon(Icons.monetization_on), label: 'Penjualan'),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Riwayat'),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.black,
-        backgroundColor: Color.fromARGB(255, 163, 129, 35), // Warna latar belakang bottom bar
+        backgroundColor: Color.fromARGB(255, 163, 129, 35),
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
       ),

@@ -9,7 +9,7 @@ class UsersPage extends StatefulWidget {
 class _UsersPageState extends State<UsersPage> {
   final supabase = Supabase.instance.client;
   List<Map<String, dynamic>> users = [];
-  bool isLoading = true; // Loading indikator
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -17,7 +17,6 @@ class _UsersPageState extends State<UsersPage> {
     fetchUsers();
   }
 
-  // 🔹 Ambil Data User dari Supabase
   Future<void> fetchUsers() async {
     try {
       final response = await supabase.from('user').select();
@@ -33,17 +32,15 @@ class _UsersPageState extends State<UsersPage> {
     }
   }
 
-  //  Hapus User
   Future<void> deleteUser(int id) async {
     try {
       await supabase.from('user').delete().eq('id', id);
-      fetchUsers(); // Refresh data setelah hapus
+      fetchUsers();
     } catch (e) {
       print("❌ Error delete data: $e");
     }
   }
 
-  // ✏️ Edit User
   Future<void> updateUser(int id, String newUsername, String newPassword) async {
     try {
       await supabase.from('user').update({
@@ -59,7 +56,10 @@ class _UsersPageState extends State<UsersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Daftar User")),
+      appBar: AppBar(
+        title: Text("Daftar User"),
+        automaticallyImplyLeading: false, // Hilangkan tombol back
+      ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : users.isEmpty
@@ -108,7 +108,6 @@ class _UsersPageState extends State<UsersPage> {
     );
   }
 
-  // 🔹 Tambah User
   void _showAddUserDialog(BuildContext context) {
     TextEditingController usernameController = TextEditingController();
     TextEditingController passwordController = TextEditingController();
@@ -154,7 +153,6 @@ class _UsersPageState extends State<UsersPage> {
     );
   }
 
-  // ✏️ Dialog Edit User
   void _showEditUserDialog(BuildContext context, Map<String, dynamic> user) {
     TextEditingController usernameController =
         TextEditingController(text: user['username']);

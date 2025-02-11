@@ -17,7 +17,7 @@ class _CustomersPageState extends State<CustomersPage> {
     fetchCustomers();
   }
 
-  //  Ambil data pelanggan dari Supabase
+  // Ambil data pelanggan dari Supabase
   Future<void> fetchCustomers() async {
     try {
       final response = await supabase.from('pelanggan').select();
@@ -33,7 +33,7 @@ class _CustomersPageState extends State<CustomersPage> {
     }
   }
 
-  //  Tambah atau Edit pelanggan
+  // Tambah atau Edit pelanggan
   Future<void> showCustomerDialog({int? pelangganId, String? nama, String? alamat, String? telepon}) async {
     TextEditingController nameController = TextEditingController(text: nama ?? '');
     TextEditingController addressController = TextEditingController(text: alamat ?? '');
@@ -59,20 +59,20 @@ class _CustomersPageState extends State<CustomersPage> {
                 if (nameController.text.isNotEmpty && phoneController.text.isNotEmpty) {
                   try {
                     if (pelangganId == null) {
-                      //  Insert data baru
+                      // Insert data baru
                       await supabase.from('pelanggan').insert({
                         'nama_pelanggan': nameController.text,
                         'alamat': addressController.text,
                         'nomor_telepon': phoneController.text,
-                        'created_at': DateTime.now().toIso8601String(), // Sesuai tabel
+                        'created_at': DateTime.now().toIso8601String(),
                       });
                     } else {
-                      //  Update data pelanggan
+                      // Update data pelanggan
                       await supabase.from('pelanggan').update({
                         'nama_pelanggan': nameController.text,
                         'alamat': addressController.text,
                         'nomor_telepon': phoneController.text,
-                      }).match({'pelanggan_id': pelangganId}); // 🔹 Gunakan match()
+                      }).match({'pelanggan_id': pelangganId});
                     }
                     fetchCustomers();
                     Navigator.pop(context);
@@ -103,7 +103,10 @@ class _CustomersPageState extends State<CustomersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Daftar Pelanggan")),
+      appBar: AppBar(
+        title: Text("Daftar Pelanggan"),
+        automaticallyImplyLeading: false, // 🔹 Menghilangkan tombol back
+      ),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : customers.isEmpty
@@ -113,7 +116,6 @@ class _CustomersPageState extends State<CustomersPage> {
                   itemBuilder: (context, index) {
                     final customer = customers[index];
 
-                    //  Pastikan ID tidak null, default ke -1 jika null
                     int pelangganId = customer['pelanggan_id'] ?? -1;
 
                     return Card(
